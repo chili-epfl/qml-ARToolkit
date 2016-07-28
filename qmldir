@@ -1,0 +1,3 @@
+module ARToolkit
+plugin qml-ARToolkit
+typeinfo artoolkit.qmltypes
