@@ -14,8 +14,8 @@ Entity {
         left: -0.1*(artoolkit.projectionMatrix.m13/artoolkit.projectionMatrix.m22)
         right: 0.1*(artoolkit.projectionMatrix.m13/artoolkit.projectionMatrix.m22)
 
-        position: Qt.vector3d( 0.0, 0.0, -1 )
-        upVector: Qt.vector3d( 0.0, -1.0, 0.0 )
+        position: Qt.vector3d( 0.0, 0.0, 1 )
+        upVector: Qt.vector3d( 0.0, 1.0, 0.0 )
         viewCenter: Qt.vector3d( 0.0, 0.0, 0.0 )
     }
 
@@ -55,7 +55,6 @@ Entity {
     ]
 
     Entity {
-
         components: [
             Transform {
                     translation:ar_obj.translation
@@ -63,21 +62,55 @@ Entity {
                 } ]
 
         Entity {
-            id: sphereEntity
             enabled:ar_obj.objectIsVisible
             CuboidMesh {
                 id: cuboidMesh
-                xExtent: 50
-                yExtent: 50
-                zExtent: 30
+                xExtent: 20
+                yExtent: 20
+                zExtent: 20
             }
 
             Transform {
                 id: cuboidTransform
-                translation:Qt.vector3d(0,0,15)
+                translation:Qt.vector3d(0,0,20)
             }
-            components: [ cuboidMesh, cuboidTransform ]
+            PhongMaterial{
+                id:cuboidMaterial
+                ambient:"blue"
+            }
+            components: [ cuboidMesh, cuboidTransform,cuboidMaterial ]
 
+        }        
+        Entity{
+            SphereMesh{
+                id:sphereMesh
+                radius: 20
+            }
+            Transform {
+                id: sphereTransform
+                translation:Qt.vector3d(0,50,0)
+            }
+            PhongMaterial{
+                id:sphereMaterial
+                ambient:"green"
+            }
+            components: [sphereMesh,sphereTransform,sphereMaterial]
+        }
+        Entity{
+            CylinderMesh{
+                id:cylinderMesh
+                radius: 20
+                length: 20
+            }
+            Transform {
+                id: cylinderTransform
+                translation:Qt.vector3d(50,0,0)
+            }
+            PhongMaterial{
+                id:cylinderMaterial
+                ambient:"red"
+            }
+            components: [cylinderMesh,cylinderTransform,cylinderMaterial]
         }
 
     }
@@ -90,21 +123,18 @@ Entity {
                 } ]
 
         Entity {
-            id: sphereEntity2
             enabled:ar_obj_multi.objectIsVisible
             CuboidMesh {
                 id: cuboidMesh2
-                xExtent: 50
-                yExtent: 50
-                zExtent: 30
+                xExtent: 20
+                yExtent: 20
+                zExtent: 20
             }
-
             Transform {
                 id: cuboidTransform2
-                translation:Qt.vector3d(0,0,15)
+                translation:Qt.vector3d(15,15,15)
             }
             components: [ cuboidMesh2, cuboidTransform2 ]
-
         }
 
     }

@@ -28,8 +28,11 @@ typedef QHash<QString,Pose> PoseMap;
 
 struct AR3DObject {
     ARdouble pose[3][4];
+
+    /*In Opengl coordinate system*/
     QQuaternion rotation;
     QVector3D translation;
+    /*....*/
     ARFilterTransMatInfo* ftmi;
     bool visible,was_visible;
     qreal size;
@@ -48,8 +51,10 @@ struct AR3DObject {
 };
 struct AR3DMultiPatternObject {
     ARMultiMarkerInfoT* marker_info;
+    /*In Opengl coordinate system*/
     QQuaternion rotation;
     QVector3D translation;
+    /*....*/
     ARFilterTransMatInfo* ftmi;
     bool visible;
     inline AR3DMultiPatternObject& operator=(const AR3DMultiPatternObject& o) {

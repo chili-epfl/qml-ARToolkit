@@ -80,7 +80,7 @@ void ARToolKit::run()
     QMatrix3x3 rotMat;
     PoseMap posemap;
     qreal err;
-
+    QQuaternion openglAlignment=QQuaternion::fromAxisAndAngle(1,0,0,180);
     while(running){
         if (nextFrameAvailable) {
             nextFrameAvailable=false;
@@ -146,7 +146,21 @@ void ARToolKit::run()
                         }
                     }
                 }
-
+                /*FIX due to https://github.com/artoolkit/artoolkit5/pull/163*/
+                Q_FOREACH(int id,current_markers.keys()){
+                    ARMarkerInfo o=current_markers[id];
+                    if(id>0){
+                        o.cf=o.cfMatrix;
+                        o.dir=o.dirMatrix;
+                        o.id=o.idMatrix;
+                    }
+                    else if(id<0){
+                        o.cf=o.cfPatt;
+                        o.dir=o.dirPatt;
+                        o.id=o.idPatt;
+                    }
+                    current_markers[id]=o;
+                }
                 /*.....*/
                 Q_FOREACH(int id,current_markers.keys()){
                     if(ar_objects.contains(id)){
@@ -157,7 +171,6 @@ void ARToolKit::run()
                             o->size<0 ? err=arGetTransMatSquare(ar_3d_handle, &(current_markers[id]), default_marker_size, new_pose): err=arGetTransMatSquare(ar_3d_handle, &(current_markers[id]), o->size, new_pose);
                         if(err<0)
                             continue;
-
                         /*Filter*/
                         arFilterTransMat(o->ftmi,new_pose,!o->was_visible);
                         /*...*/
@@ -168,15 +181,16 @@ void ARToolKit::run()
                                 if(j<3)
                                     rotMat(i,j)=new_pose[i][j];
                             }
-                          o->rotation=QQuaternion::fromRotationMatrix(rotMat);
-                          o->translation.setX(new_pose[0][3]);
-                          o->translation.setY(new_pose[1][3]);
-                          o->translation.setZ(new_pose[2][3]);
 
-//                        qDebug()<<new_pose[0][0]<<" "<<new_pose[0][1]<<" "<<new_pose[0][2]<<" "<<new_pose[0][3];
-//                        qDebug()<<new_pose[1][0]<<" "<<new_pose[1][1]<<" "<<new_pose[1][2]<<" "<<new_pose[1][3];
-//                        qDebug()<<new_pose[2][0]<<" "<<new_pose[2][1]<<" "<<new_pose[2][2]<<" "<<new_pose[2][3];
-//                        qDebug()<<"";
+                          o->rotation=openglAlignment*QQuaternion::fromRotationMatrix(rotMat);
+                          o->translation.setX(new_pose[0][3]);
+                          o->translation.setY(-new_pose[1][3]);
+                          o->translation.setZ(-new_pose[2][3]);
+
+//                        qDebug()<<"("<<new_pose[0][0]<<","<<new_pose[0][1]<<","<<new_pose[0][2]<<","<<new_pose[0][3];
+//                        qDebug()<<new_pose[1][0]<<","<<new_pose[1][1]<<","<<new_pose[1][2]<<","<<new_pose[1][3];
+//                        qDebug()<<new_pose[2][0]<<","<<new_pose[2][1]<<","<<new_pose[2][2]<<","<<new_pose[2][3];
+//                        qDebug()<<")";
 
                         o->visible=true;
 
