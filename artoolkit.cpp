@@ -226,10 +226,10 @@ void ARToolKit::run()
                             for(int j=0;j<3;j++)
                                 rotMat(i,j)=o->marker_info->trans[i][j];
 
-                        o->rotation=QQuaternion::fromRotationMatrix(rotMat);
+                        o->rotation=openglAlignment*QQuaternion::fromRotationMatrix(rotMat);
                         o->translation.setX(new_pose[0][3]);
-                        o->translation.setY(new_pose[1][3]);
-                        o->translation.setZ(new_pose[2][3]);
+                        o->translation.setY(-new_pose[1][3]);
+                        o->translation.setZ(-new_pose[2][3]);
                         posemap[id]=Pose(o->translation,o->rotation);
                     }
                 }
