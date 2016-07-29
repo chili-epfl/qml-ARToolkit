@@ -112,7 +112,6 @@ void ARToolKit::run()
             Q_FOREACH(int id,ar_objects.keys())
                 ar_objects[id]->visible=false;
 
-
             if(marker_num>0){
                 marker_info=arGetMarker(ar_handle);
                 /*Pick best markers based on confidence*/
@@ -163,12 +162,13 @@ void ARToolKit::run()
                 }
                 /*.....*/
                 Q_FOREACH(int id,current_markers.keys()){
-                    if(ar_objects.contains(id)){
+                    if(ar_objects.contains(id)){                        
                         AR3DObject* o=ar_objects[id];
+                        ARMarkerInfo current_marker=current_markers[id];
                         if(o->was_visible)
-                            o->size<0 ? err=arGetTransMatSquareCont(ar_3d_handle, &(current_markers[id]), o->pose , default_marker_size, new_pose) : err=arGetTransMatSquareCont(ar_3d_handle, &(current_markers[id]), o->pose , o->size, new_pose);
+                            o->size<0 ? err=arGetTransMatSquareCont(ar_3d_handle, &current_marker, o->pose , default_marker_size, new_pose) : err=arGetTransMatSquareCont(ar_3d_handle, &(current_markers[id]), o->pose , o->size, new_pose);
                         else
-                            o->size<0 ? err=arGetTransMatSquare(ar_3d_handle, &(current_markers[id]), default_marker_size, new_pose): err=arGetTransMatSquare(ar_3d_handle, &(current_markers[id]), o->size, new_pose);
+                            o->size<0 ? err=arGetTransMatSquare(ar_3d_handle, &current_marker, default_marker_size, new_pose): err=arGetTransMatSquare(ar_3d_handle, &(current_markers[id]), o->size, new_pose);
                         if(err<0)
                             continue;
                         /*Filter*/
@@ -195,10 +195,19 @@ void ARToolKit::run()
                         o->visible=true;
 
                         if(id>0)
-                            posemap[QString("Mat_")+QString::number(--id)]=Pose(o->translation,o->rotation);
+                            posemap[QString("Mat_")+QString::number(--id)]=Pose(o->translation,o->rotation,
+                                                                                QVector2D(current_marker.vertex[(4-current_marker.dirMatrix)%4][0],current_marker.vertex[(4-current_marker.dirMatrix)%4][1]),
+                                                                                QVector2D(current_marker.vertex[(5-current_marker.dirMatrix)%4][0],current_marker.vertex[(5-current_marker.dirMatrix)%4][1]),
+                                                                                QVector2D(current_marker.vertex[(6-current_marker.dirMatrix)%4][0],current_marker.vertex[(6-current_marker.dirMatrix)%4][1]),
+                                                                                QVector2D(current_marker.vertex[(7-current_marker.dirMatrix)%4][0],current_marker.vertex[(7-current_marker.dirMatrix)%4][1])
+                                                                                );
                         else if(id<0)
-                            posemap[QString("Patt_")+QString::number(-id-1)]=Pose(o->translation,o->rotation);
-
+                            posemap[QString("Patt_")+QString::number(-id-1)]=Pose(o->translation,o->rotation,
+                                                                                  QVector2D(current_marker.vertex[(4-current_marker.dirMatrix)%4][0],current_marker.vertex[(4-current_marker.dirMatrix)%4][1]),
+                                                                                  QVector2D(current_marker.vertex[(5-current_marker.dirMatrix)%4][0],current_marker.vertex[(5-current_marker.dirMatrix)%4][1]),
+                                                                                  QVector2D(current_marker.vertex[(6-current_marker.dirMatrix)%4][0],current_marker.vertex[(6-current_marker.dirMatrix)%4][1]),
+                                                                                  QVector2D(current_marker.vertex[(7-current_marker.dirMatrix)%4][0],current_marker.vertex[(7-current_marker.dirMatrix)%4][1])
+                                                                                 );
                     }
                     else{
                        AR3DObject* new_object=new AR3DObject;
@@ -570,4 +579,25 @@ void ARToolKit::setupMarkerParameters()
         }
         arPattAttach(ar_handle, ar_patt_handle);
     }
+}
+
+
+Pose::Pose()
+{
+   translation=QVector3D();
+   rotation=QQuaternion();
+   TLCorner=QVector2D();
+   TRCorner=QVector2D();
+   BLCorner=QVector2D();
+   BRCorner=QVector2D();
+}
+
+Pose::Pose(const QVector3D &translation, const QQuaternion &rotation, const QVector2D &TLCorner, const QVector2D &TRCorner, const QVector2D &BRCorner, const QVector2D &BLCorner)
+{
+    this->translation=translation;
+    this->rotation=rotation;
+    this->TLCorner=TLCorner;
+    this->TRCorner=TRCorner;
+    this->BRCorner=BRCorner;
+    this->BLCorner=BLCorner;
 }

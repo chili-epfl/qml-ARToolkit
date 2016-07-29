@@ -198,11 +198,25 @@ void ARToolKitVideoFilter::updateObserver(QString prevObjId)
 void ARToolKitVideoFilter::notifyObservers(const PoseMap &poses)
 {
     //Change to concurrent
+    m_detected_markers.clear();
+    QVariantMap marker_info;
+    Q_FOREACH(QString key, poses.keys()){
+        Pose p=poses[key];
+        marker_info["id"]=key;
+        marker_info["rotation"]=p.rotation;
+        marker_info["translation"]=p.translation;
+        marker_info["TLCorner"]=p.TLCorner;
+        marker_info["TRCorner"]=p.TRCorner;
+        marker_info["BRCorner"]=p.BRCorner;
+        marker_info["BLCorner"]=p.BLCorner;
+        m_detected_markers.append(marker_info);
+    }
     Q_FOREACH(QString key, m_observers.keys()){
         if(poses.contains(key)){
             Q_FOREACH(ARToolKitObject* observer, m_observers.values(key)){
                 Pose p=poses[key];
-                observer->setPose(p.first,p.second);
+                observer->setPose(p.translation,p.rotation);
+                observer->setCorners(p.TLCorner,p.TRCorner,p.BRCorner,p.BLCorner);
                 observer->setVisible(true);
             }
         }
@@ -211,6 +225,7 @@ void ARToolKitVideoFilter::notifyObservers(const PoseMap &poses)
                 observer->setVisible(false);
         }
     }
+    emit detectedMarkersChanged();
 }
 
 void ARToolKitVideoFilter::cleanFilter()

@@ -12,8 +12,6 @@
 #include "artoolkit.h"
 #include <QUrl>
 
-typedef QPair<QVector3D,QQuaternion> Pose;
-typedef QHash<QString,Pose> PoseMap;
 
 class ARToolkitFilterRunnable: public QObject ,public QVideoFilterRunnable
 {

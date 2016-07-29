@@ -14,6 +14,7 @@ extern "C"{
 #include <QSize>
 #include <QMatrix4x4>
 #include <QUrl>
+#include <QVector2D>
 /*
  * A handle can load multiple patterns(up to ARPattHandle->patt_num_max).
  * The pattern id depends on the order of loading of the file.
@@ -22,7 +23,18 @@ extern "C"{
 */
 
 
-typedef QPair<QVector3D,QQuaternion> Pose;
+struct Pose{
+    QVector3D translation;
+    QQuaternion rotation;
+    QVector2D TLCorner;
+    QVector2D TRCorner;
+    QVector2D BRCorner;
+    QVector2D BLCorner;
+    Pose();
+    Pose(const QVector3D& translation, const QQuaternion& rotation,
+         const QVector2D& TLCorner=QVector2D(-1,-1),const QVector2D& TRCorner=QVector2D(-1,-1),
+         const QVector2D& BRCorner=QVector2D(-1,-1),const QVector2D& BLCorner=QVector2D(-1,-1));
+};
 typedef QHash<QString,Pose> PoseMap;
 
 
