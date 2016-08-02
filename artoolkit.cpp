@@ -27,7 +27,7 @@ ARToolKit::ARToolKit()
     ar_param=NULL;
     ar_patt_handle=NULL;
 
-    patter_detection_mode=AR_TEMPLATE_MATCHING_MONO_AND_MATRIX;
+    patter_detection_mode=AR_MATRIX_CODE_DETECTION;
     code_type=AR_MATRIX_CODE_3x3;
 
     memory_size=0;
@@ -236,9 +236,9 @@ void ARToolKit::run()
                                 rotMat(i,j)=o->marker_info->trans[i][j];
 
                         o->rotation=openglAlignment*QQuaternion::fromRotationMatrix(rotMat);
-                        o->translation.setX(new_pose[0][3]);
-                        o->translation.setY(-new_pose[1][3]);
-                        o->translation.setZ(-new_pose[2][3]);
+                        o->translation.setX(o->marker_info->trans[0][3]);
+                        o->translation.setY(-o->marker_info->trans[1][3]);
+                        o->translation.setZ(-o->marker_info->trans[2][3]);
                         posemap[id]=Pose(o->translation,o->rotation);
                     }
                 }
@@ -253,6 +253,7 @@ void ARToolKit::run()
 
             //notify
             emit objectsReady(posemap);
+
         }
         else
             nextFrameCond.wait(&frameLock);
