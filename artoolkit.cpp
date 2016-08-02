@@ -222,7 +222,7 @@ void ARToolKit::run()
                 /*Multipatter*/
                 Q_FOREACH(QString id, ar_multimarker_objects.keys()){
                     AR3DMultiPatternObject* o=ar_multimarker_objects[id];
-                    err=arGetTransMatMultiSquare(ar_3d_handle,marker_info,marker_num,o->marker_info);
+                    err=arGetTransMatMultiSquareRobust(ar_3d_handle,marker_info,marker_num,o->marker_info);
                     if(err<0)
                         o->visible=false;
                     else{
