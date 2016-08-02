@@ -7,11 +7,12 @@ import QtQuick.Scene3D 2.0
 ApplicationWindow {
     visible: true
     title: qsTr("Hello World")
-
+    width: 640
+    height: 480
     Camera{
         id:cameraDev
-        //viewfinder.resolution: "640x480"
-        deviceId: QtMultimedia.availableCameras[0].deviceId
+        viewfinder.resolution: "640x480"
+        deviceId: QtMultimedia.availableCameras[1].deviceId
         imageProcessing.whiteBalanceMode: CameraImageProcessing.WhiteBalanceAuto
         focus.focusMode: CameraFocus.FocusAuto + CameraFocus.FocusContinuous
         focus.focusPointMode: CameraFocus.FocusPointAuto
@@ -41,6 +42,7 @@ ApplicationWindow {
     }
     ARToolkit{
         id:artoolkit
+        matrixCode: ARToolkit.MATRIX_CODE_4x4_BCH_13_9_3
         Component.onCompleted: {
             artoolkit.loadSingleMarkersConfigFile("qrc:/single_markers.json");
             artoolkit.loadMultiMarkersConfigFile("MultiMarker","qrc:/MultiMarkerConfig.dat");
@@ -55,7 +57,7 @@ ApplicationWindow {
     ARToolkitObject{
         objectId: "MultiMarker"
         id:ar_obj_multi
-        Component.onCompleted: artoolkit.registerObserver(ar_obj)
+        Component.onCompleted: artoolkit.registerObserver(ar_obj_multi)
         onObjectIsVisibleChanged: console.log(objectIsVisible)
     }
     Scene3D{
