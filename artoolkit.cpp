@@ -27,7 +27,7 @@ ARToolKit::ARToolKit()
     ar_param=NULL;
     ar_patt_handle=NULL;
 
-    patter_detection_mode=AR_MATRIX_CODE_DETECTION;
+    patter_detection_mode=AR_TEMPLATE_MATCHING_MONO_AND_MATRIX;
     code_type=AR_MATRIX_CODE_3x3;
 
     memory_size=0;
