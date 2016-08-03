@@ -143,6 +143,7 @@ QVideoFrame ARToolkitFilterRunnable::run(QVideoFrame *input,
                             void main(void) {
                             lowp vec3 color = texture(image, coord).rgb;
                             fragment = dot(color, luma);
+                            //fragment = pow(fragment,2.0);
                             }
                             )";
 
