@@ -63,6 +63,7 @@ Module {
         Property { name: "defaultMarkerSize"; type: "double" }
         Property { name: "matrixCode"; type: "MATRIX_CODE_TYPE" }
         Property { name: "detectedMarkers"; type: "QVariantList"; isReadonly: true }
+        Property { name: "labelingThreshold"; type: "int" }
         Method {
             name: "unregisterObserver"
             Parameter { name: "o"; type: "ARToolKitObject"; isPointer: true }

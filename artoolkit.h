@@ -92,6 +92,7 @@ public:
     void loadMultiMarkersConfigFile(QString config_name, QUrl url);
     void setDistortionParameters(QVector4D param);
     void setMatrixCode(AR_MATRIX_CODE_TYPE code);
+    void setLabelingThreshold(int v);
 public slots:
     void run();
     void setCameraResolution(QSize size);
@@ -124,7 +125,7 @@ private:
     QVector4D distortionParameters;
     bool using_default_distortion_parameters;
 
-
+    int labelingThreshold;
 
     QSize cameraResolution;
     void setupCameraParameters();

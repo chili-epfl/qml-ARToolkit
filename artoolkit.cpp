@@ -16,6 +16,8 @@ const int FPS_PRINT_PERIOD = 500;       ///< Period of printing the FPS estimate
 
 ARToolKit::ARToolKit()
 {
+    labelingThreshold=AR_DEFAULT_LABELING_THRESH;
+
     default_marker_size=50;
     using_default_projection=true;
     pixFormat=AR_PIXEL_FORMAT_MONO;
@@ -447,6 +449,13 @@ void ARToolKit::setMatrixCode(AR_MATRIX_CODE_TYPE code)
     setupMarkerParameters();
 }
 
+void ARToolKit::setLabelingThreshold(int v)
+{
+    labelingThreshold=v;
+    arSetLabelingThresh(ar_handle,labelingThreshold);
+
+}
+
 void ARToolKit::setCameraResolution(QSize size)
 {
     if(cameraResolution!=size){
@@ -575,6 +584,7 @@ void ARToolKit::setupMarkerParameters()
 {
     if(ar_handle){
         arSetLabelingThreshMode(ar_handle, threshold_mode);
+        arSetLabelingThresh(ar_handle,labelingThreshold);
         arSetPatternDetectionMode(ar_handle,patter_detection_mode);
         arSetMatrixCodeType(ar_handle, code_type);
         if(ar_patt_handle==NULL){

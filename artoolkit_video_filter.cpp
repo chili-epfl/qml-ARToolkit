@@ -5,7 +5,7 @@ ARToolKitVideoFilter::ARToolKitVideoFilter(QQuickItem *parent):
     QAbstractVideoFilter(parent)
 {
     qRegisterMetaType<PoseMap>("PoseMap");
-
+    m_labeling_threshold=AR_DEFAULT_LABELING_THRESH;
     m_pause=false;
 
     m_cameraResolution=QSize(640,480);
@@ -41,10 +41,11 @@ QVideoFilterRunnable *ARToolKitVideoFilter::createFilterRunnable()
         m_filter_runnable->loadSingleMarkersConfigFile(m_single_markers_config_file_url);
     if(!m_multi_markers_config_file_url.isEmpty())
         m_filter_runnable->loadMultiMarkersConfigFile(m_multi_marker_config_name,m_multi_markers_config_file_url);
-    if(m_filter_runnable)
-        m_filter_runnable->setMatrixCode((AR_MATRIX_CODE_TYPE)m_matrix_code);
-    if(m_filter_runnable)
-        m_filter_runnable->setDefaultMarkerSize(m_default_marker_size);
+
+    m_filter_runnable->setMatrixCode((AR_MATRIX_CODE_TYPE)m_matrix_code);
+    m_filter_runnable->setDefaultMarkerSize(m_default_marker_size);
+    m_filter_runnable->setLabelingThreshold(m_labeling_threshold);
+
     m_filter_runnable->setPause(m_pause);
     m_filter_runnable->start();
 
@@ -167,6 +168,20 @@ void ARToolKitVideoFilter::setMatrixCode(MATRIX_CODE_TYPE code)
         if(m_filter_runnable)
             m_filter_runnable->setMatrixCode((AR_MATRIX_CODE_TYPE)m_matrix_code);
         emit matrixCodeChanged();
+    }
+}
+
+void ARToolKitVideoFilter::setLabelingThreshold(int v)
+{
+    if(v<0)
+        v=0;
+    else if(v>255)
+        v=255;
+    if(v!=m_labeling_threshold){
+        m_labeling_threshold=v;
+        if(m_filter_runnable)
+            m_filter_runnable->setLabelingThreshold(m_labeling_threshold);
+        emit labelingThresholdChanged();
     }
 }
 

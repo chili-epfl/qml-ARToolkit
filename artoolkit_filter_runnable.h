@@ -29,6 +29,7 @@ public:
     void loadMultiMarkersConfigFile(QString config_name, QUrl url);
     void setDistortionParameters(QVector4D param);
     void setMatrixCode(AR_MATRIX_CODE_TYPE code);
+    void setLabelingThreshold(int v);
 signals:
     void cameraResolutionChanged(QSize);
     void projectionMatrixChanged(QMatrix4x4);

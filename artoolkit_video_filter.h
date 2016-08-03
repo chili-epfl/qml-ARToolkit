@@ -21,6 +21,7 @@ class ARToolKitVideoFilter : public QAbstractVideoFilter
     Q_PROPERTY(qreal defaultMarkerSize READ defaultMarkerSize WRITE setDefaultMarkerSize NOTIFY defaultMarkerSizeChanged)
     Q_PROPERTY(MATRIX_CODE_TYPE matrixCode READ matrixCode WRITE setMatrixCode NOTIFY matrixCodeChanged)
     Q_PROPERTY(QVariantList detectedMarkers READ detectedMarkers NOTIFY detectedMarkersChanged)
+    Q_PROPERTY(int labelingThreshold READ labelingThreshold WRITE setLabelingThreshold NOTIFY labelingThresholdChanged)
 public:
     enum MATRIX_CODE_TYPE {
         MATRIX_CODE_3x3= AR_MATRIX_CODE_3x3,                                        // Matrix code in range 0-63.
@@ -57,6 +58,8 @@ public:
     MATRIX_CODE_TYPE matrixCode(){return m_matrix_code;}
     void setMatrixCode(MATRIX_CODE_TYPE code);
     QVariantList detectedMarkers(){return m_detected_markers;}
+    int labelingThreshold(){return m_labeling_threshold;}
+    void setLabelingThreshold(int v);
 signals:
     void projectionMatrixChanged();
     void pauseChanged();
@@ -65,6 +68,7 @@ signals:
     void distortionParametersChanged();
     void matrixCodeChanged();
     void detectedMarkersChanged();
+    void labelingThresholdChanged();
 public slots:
 
     Q_INVOKABLE void unregisterObserver(ARToolKitObject* o);
@@ -99,6 +103,7 @@ private:
 
     ARToolkitFilterRunnable* m_filter_runnable;
     QVariantList m_detected_markers;
+    int m_labeling_threshold;
 };
 
 #endif // ARUCODETECTOR_H

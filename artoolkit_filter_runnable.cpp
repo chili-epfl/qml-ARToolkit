@@ -249,3 +249,9 @@ void ARToolkitFilterRunnable::setMatrixCode(AR_MATRIX_CODE_TYPE code)
     if(detector)
         detector->setMatrixCode(code);
 }
+
+void ARToolkitFilterRunnable::setLabelingThreshold(int v)
+{
+    if(detector)
+        detector->setLabelingThreshold(v);
+}
