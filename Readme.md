@@ -6,7 +6,7 @@ qml-ARToolkit is a qml plugin wrapper around ARToolkit v5.
 - Marker and multimarker tracking (Patter detection not available) 
 - Greyscale Detection (frames are converted in greyscale images);
 - Detection mode is AR_TEMPLATE_MATCHING_MONO_AND_MATRIX
-- Threshold mode is AR_LABELING_THRESH_MODE_AUTO_ADAPTIVE
+- Threshold mode is AR_LABELING_THRESH_MODE_MANUAL
 - Pose filtering
 - Robust estimation for multipattern configurations
 

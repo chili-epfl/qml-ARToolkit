@@ -19,7 +19,8 @@ ARToolKit::ARToolKit()
     default_marker_size=50;
     using_default_projection=true;
     pixFormat=AR_PIXEL_FORMAT_MONO;
-    threshold_mode=AR_LABELING_THRESH_MODE_AUTO_ADAPTIVE;
+    //threshold_mode=AR_LABELING_THRESH_MODE_AUTO_ADAPTIVE;
+    threshold_mode=AR_LABELING_THRESH_MODE_MANUAL;
     cameraResolution=QSize(640,480);
 
     ar_3d_handle=NULL;
@@ -92,7 +93,6 @@ void ARToolKit::run()
                 memory_size=buffer.size();
             }
             memcpy(ar_buffer->buff,buffer.constData(),sizeof(ARUint8)*buffer.size());
-
             frameLock.unlock();
             ar_buffer->bufPlaneCount=0;
             ar_buffer->bufPlanes=NULL;
@@ -100,6 +100,8 @@ void ARToolKit::run()
             ar_buffer->time_sec=(ARUint32)QDateTime::currentMSecsSinceEpoch()/1000;
             ar_buffer->time_usec=(ARUint32)QDateTime::currentMSecsSinceEpoch()-ar_buffer->time_sec*1000;
             ar_buffer->buffLuma=ar_buffer->buff;
+//            QImage img(ar_buffer->buff,cameraResolution.width(),cameraResolution.height(),QImage::Format_Grayscale8);
+//            img.save(QString(getenv("EXTERNAL_STORAGE"))+"/Pictures/"+QString::number(rand()).append(".png"));
            // Detect the markers in the video frame.
             if (arDetectMarker(ar_handle, ar_buffer) < 0) {
                 qDebug()<<"Error in arDetectMarker";
@@ -572,7 +574,7 @@ void ARToolKit::setupCameraParameters()
 void ARToolKit::setupMarkerParameters()
 {
     if(ar_handle){
-        arSetLabelingMode(ar_handle, threshold_mode);
+        arSetLabelingThreshMode(ar_handle, threshold_mode);
         arSetPatternDetectionMode(ar_handle,patter_detection_mode);
         arSetMatrixCodeType(ar_handle, code_type);
         if(ar_patt_handle==NULL){
