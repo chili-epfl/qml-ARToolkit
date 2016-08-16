@@ -166,7 +166,7 @@ void ARToolKit::run()
                 }
                 /*.....*/
                 Q_FOREACH(int id,current_markers.keys()){
-                    if(ar_objects.contains(id)){                        
+                    if(ar_objects.contains(id)){
                         AR3DObject* o=ar_objects[id];
                         ARMarkerInfo current_marker=current_markers[id];
                         if(o->was_visible)
@@ -266,7 +266,7 @@ void ARToolKit::run()
         if(millis>0){
             fps = FPS_RATE*fps + (1.0f - FPS_RATE)*(1000.0f/millis);
             if(millisElapsed >= FPS_PRINT_PERIOD){
-                qDebug("Chilitags is running at %f FPS",fps);
+                qDebug("ARToolkit is running at %f FPS",fps);
                 millisElapsed = 0;
             }
         }
