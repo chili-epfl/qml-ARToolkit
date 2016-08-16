@@ -259,15 +259,14 @@ void ARToolKit::run()
             emit objectsReady(posemap);
 
         }
-        else
-            nextFrameCond.wait(&frameLock);
+        nextFrameCond.wait(&frameLock);
 #ifdef DEBUG_FPS
         millis = (long)timer.restart();
         millisElapsed += millis;
         if(millis>0){
             fps = FPS_RATE*fps + (1.0f - FPS_RATE)*(1000.0f/millis);
             if(millisElapsed >= FPS_PRINT_PERIOD){
-                qDebug("ARtoolkit is running at %f FPS",fps);
+                qDebug("Chilitags is running at %f FPS",fps);
                 millisElapsed = 0;
             }
         }
