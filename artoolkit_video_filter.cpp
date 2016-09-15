@@ -23,6 +23,8 @@ ARToolKitVideoFilter::ARToolKitVideoFilter(QQuickItem *parent):
     m_default_marker_size=30;
     m_filter_runnable=NULL;
     m_matrix_code=MATRIX_CODE_3x3;
+    m_cutoff_freq=15;
+    m_sample_freq=30;
 }
 
 ARToolKitVideoFilter::~ARToolKitVideoFilter(){
@@ -45,7 +47,8 @@ QVideoFilterRunnable *ARToolKitVideoFilter::createFilterRunnable()
     m_filter_runnable->setMatrixCode((AR_MATRIX_CODE_TYPE)m_matrix_code);
     m_filter_runnable->setDefaultMarkerSize(m_default_marker_size);
     m_filter_runnable->setLabelingThreshold(m_labeling_threshold);
-
+    m_filter_runnable->setFilter_cutoff_freq(m_cutoff_freq);
+    m_filter_runnable->setFilter_sample_rate(m_sample_freq);
     m_filter_runnable->setPause(m_pause);
     m_filter_runnable->start();
 
@@ -182,6 +185,27 @@ void ARToolKitVideoFilter::setLabelingThreshold(int v)
         if(m_filter_runnable)
             m_filter_runnable->setLabelingThreshold(m_labeling_threshold);
         emit labelingThresholdChanged();
+    }
+}
+
+void ARToolKitVideoFilter::setFilter_cutoff_freq(qreal val)
+{
+    if(val>0 && val!=m_cutoff_freq){
+        m_cutoff_freq=val;
+        if(m_filter_runnable)
+            m_filter_runnable->setFilter_cutoff_freq(m_labeling_threshold);
+        emit filter_cutoff_freqChanged();
+    }
+
+}
+
+void ARToolKitVideoFilter::setFilter_sample_rate(qreal val)
+{
+    if(val>0 && val!=m_sample_freq){
+        m_sample_freq=val;
+        if(m_filter_runnable)
+            m_filter_runnable->setFilter_sample_rate(m_labeling_threshold);
+        emit filter_sample_rateChanged();
     }
 }
 

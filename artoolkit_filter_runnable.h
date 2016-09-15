@@ -3,7 +3,7 @@
 
 
 #include <QVideoFilterRunnable>
-#include<QDebug>
+#include <QDebug>
 #include <QElapsedTimer>
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLShaderProgram>
@@ -30,6 +30,8 @@ public:
     void setDistortionParameters(QVector4D param);
     void setMatrixCode(AR_MATRIX_CODE_TYPE code);
     void setLabelingThreshold(int v);
+    void setFilter_sample_rate(qreal v);
+    void setFilter_cutoff_freq(qreal v);
 signals:
     void cameraResolutionChanged(QSize);
     void projectionMatrixChanged(QMatrix4x4);

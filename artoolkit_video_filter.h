@@ -22,6 +22,8 @@ class ARToolKitVideoFilter : public QAbstractVideoFilter
     Q_PROPERTY(MATRIX_CODE_TYPE matrixCode READ matrixCode WRITE setMatrixCode NOTIFY matrixCodeChanged)
     Q_PROPERTY(QVariantList detectedMarkers READ detectedMarkers NOTIFY detectedMarkersChanged)
     Q_PROPERTY(int labelingThreshold READ labelingThreshold WRITE setLabelingThreshold NOTIFY labelingThresholdChanged)
+    Q_PROPERTY(qreal filter_cutoff_freq READ filter_cutoff_freq WRITE setFilter_cutoff_freq NOTIFY filter_cutoff_freqChanged)
+    Q_PROPERTY(qreal filter_sample_rate READ filter_sample_rate WRITE setFilter_sample_rate NOTIFY filter_sample_rateChanged)
 public:
     enum MATRIX_CODE_TYPE {
         MATRIX_CODE_3x3= AR_MATRIX_CODE_3x3,                                        // Matrix code in range 0-63.
@@ -60,6 +62,13 @@ public:
     QVariantList detectedMarkers(){return m_detected_markers;}
     int labelingThreshold(){return m_labeling_threshold;}
     void setLabelingThreshold(int v);
+
+    qreal filter_cutoff_freq(){return m_cutoff_freq;}
+    qreal filter_sample_rate(){return m_sample_freq;}
+
+    void setFilter_cutoff_freq(qreal val);
+    void setFilter_sample_rate(qreal val);
+
 signals:
     void projectionMatrixChanged();
     void pauseChanged();
@@ -69,6 +78,8 @@ signals:
     void matrixCodeChanged();
     void detectedMarkersChanged();
     void labelingThresholdChanged();
+    void filter_cutoff_freqChanged();
+    void filter_sample_rateChanged();
 public slots:
 
     Q_INVOKABLE void unregisterObserver(ARToolKitObject* o);
@@ -104,6 +115,8 @@ private:
     ARToolkitFilterRunnable* m_filter_runnable;
     QVariantList m_detected_markers;
     int m_labeling_threshold;
+
+    qreal m_cutoff_freq,m_sample_freq;
 };
 
 #endif // ARUCODETECTOR_H

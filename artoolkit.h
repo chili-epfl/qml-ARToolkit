@@ -93,6 +93,8 @@ public:
     void setDistortionParameters(QVector4D param);
     void setMatrixCode(AR_MATRIX_CODE_TYPE code);
     void setLabelingThreshold(int v);
+    void setFilter_sample_rate(qreal v);
+    void setFilter_cutoff_freq(qreal v);
 public slots:
     void run();
     void setCameraResolution(QSize size);
@@ -140,7 +142,9 @@ private:
     QHash<QString,AR3DMultiPatternObject*> ar_multimarker_objects;
 
     qreal default_marker_size;
+    qreal m_cutoff_freq,m_sample_freq;
 
+    ARdouble getSizeFactor(ARdouble dist_factor[], int xsize, int ysize, int dist_function_version);
 };
 
 #endif // ARTOOLKIT_H

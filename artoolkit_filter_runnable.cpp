@@ -255,3 +255,15 @@ void ARToolkitFilterRunnable::setLabelingThreshold(int v)
     if(detector)
         detector->setLabelingThreshold(v);
 }
+
+void ARToolkitFilterRunnable::setFilter_sample_rate(qreal v)
+{
+    if(detector)
+        detector->setFilter_sample_rate(v);
+}
+
+void ARToolkitFilterRunnable::setFilter_cutoff_freq(qreal v)
+{
+    if(detector)
+        detector->setFilter_cutoff_freq(v);
+}

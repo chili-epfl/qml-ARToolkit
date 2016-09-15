@@ -45,6 +45,10 @@ ARToolKit::ARToolKit()
                 );
     distortionParameters=QVector4D(0,0,0,0);
     using_default_distortion_parameters=true;
+    m_cutoff_freq=AR_FILTER_TRANS_MAT_CUTOFF_FREQ_DEFAULT;
+    m_sample_freq=AR_FILTER_TRANS_MAT_SAMPLE_RATE_DEFAULT;
+
+
     setupCameraParameters();
     setupMarkerParameters();
 }
@@ -165,6 +169,7 @@ void ARToolKit::run()
                     current_markers[id]=o;
                 }
                 /*.....*/
+
                 Q_FOREACH(int id,current_markers.keys()){
                     if(ar_objects.contains(id)){
                         AR3DObject* o=ar_objects[id];
@@ -368,7 +373,7 @@ void ARToolKit::loadSingleMarkersConfigFile(QUrl url)
                     AR3DObject* o=new AR3DObject;
                     o->visible=false;
                     o->was_visible=false;
-                    o->ftmi=arFilterTransMatInit(AR_FILTER_TRANS_MAT_SAMPLE_RATE_DEFAULT,AR_FILTER_TRANS_MAT_CUTOFF_FREQ_DEFAULT);
+                    o->ftmi=arFilterTransMatInit(m_sample_freq,m_cutoff_freq);
                     o->size=size;
                     ar_objects[id]=o;
                 }
@@ -417,7 +422,7 @@ void ARToolKit::loadMultiMarkersConfigFile(QString config_name,QUrl url)
         AR3DMultiPatternObject* o=new AR3DMultiPatternObject;
         o->marker_info=marker_info;
         o->visible=false;
-        o->ftmi=arFilterTransMatInit(AR_FILTER_TRANS_MAT_SAMPLE_RATE_DEFAULT,AR_FILTER_TRANS_MAT_CUTOFF_FREQ_DEFAULT);
+        o->ftmi=arFilterTransMatInit(m_sample_freq,m_cutoff_freq);
         frameLock.lock();
         if(ar_multimarker_objects.contains(config_name)){
             arFilterTransMatFinal(ar_multimarker_objects[config_name]->ftmi);
@@ -455,6 +460,28 @@ void ARToolKit::setLabelingThreshold(int v)
 
 }
 
+void ARToolKit::setFilter_sample_rate(qreal v)
+{
+    m_sample_freq=v;
+    frameLock.lock();
+    Q_FOREACH(AR3DObject* object, ar_objects.values())
+           arFilterTransMatSetParams(object->ftmi,m_sample_freq,m_cutoff_freq);
+    Q_FOREACH(AR3DMultiPatternObject* object, ar_multimarker_objects.values())
+           arFilterTransMatSetParams(object->ftmi,m_sample_freq,m_cutoff_freq);
+    frameLock.unlock();
+}
+
+void ARToolKit::setFilter_cutoff_freq(qreal v)
+{
+    m_cutoff_freq=v;
+    frameLock.lock();
+    Q_FOREACH(AR3DObject* object, ar_objects.values())
+           arFilterTransMatSetParams(object->ftmi,m_sample_freq,m_cutoff_freq);
+    Q_FOREACH(AR3DMultiPatternObject* object, ar_multimarker_objects.values())
+           arFilterTransMatSetParams(object->ftmi,m_sample_freq,m_cutoff_freq);
+    frameLock.unlock();
+}
+
 void ARToolKit::setCameraResolution(QSize size)
 {
     if(cameraResolution!=size){
@@ -479,7 +506,9 @@ void ARToolKit::setupCameraParameters()
         version 2: Improved distortion model, introduced in ARToolKit v4.0. This algorithm adds a quadratic term to the radial distortion factor of the version 1 algorithm.<br>
         version 3: Improved distortion model with aspect ratio, introduced in ARToolKit v4.0. The addition of an aspect ratio to the version 2 algorithm allows for non-square pixels, as found e.g. in DV image streams.<br>
         version 4: OpenCV-based distortion model, introduced in ARToolKit v4.3. This differs from the standard OpenCV model by the addition of a scale factor, so that input values do not exceed the range [-1.0, 1.0] in either forward or inverse conversions.
-        */
+
+        https://github.com/artoolkit/artoolkit5/blob/3b8c20be09908cbf903915100e54aa2cfcbd5386/util/calib_camera/calib_camera.cpp
+    */
 
     bool scaling=false;
     cparam.xsize=640;
@@ -502,6 +531,13 @@ void ARToolKit::setupCameraParameters()
             cparam.mat[i][j]=projectionMatrix.operator ()(i,j);
         cparam.mat[i][3]=0;
     }
+
+    ARdouble s = getSizeFactor(cparam.dist_factor, cparam.xsize, cparam.ysize, cparam.dist_function_version);
+    cparam.mat[0][0] /= s;
+    cparam.mat[0][1] /= s;
+    cparam.mat[1][0] /= s;
+    cparam.mat[1][1] /= s;
+    cparam.dist_factor[8] = s;
 
     if(cameraResolution.width()!=640 || cameraResolution.height()!=480){
         //Scaling
@@ -593,6 +629,135 @@ void ARToolKit::setupMarkerParameters()
     }
 }
 
+ARdouble ARToolKit::getSizeFactor(ARdouble dist_factor[], int xsize, int ysize, int dist_function_version)
+{
+    ARdouble  ox, oy, ix, iy;
+    ARdouble  olen, ilen;
+    ARdouble  sf, sf1;
+
+    sf = 100.0;
+
+    ox = 0.0;
+    oy = dist_factor[7];
+    olen = dist_factor[6];
+    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    ilen = dist_factor[6] - ix;
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+
+    ox = xsize;
+    oy = dist_factor[7];
+    olen = xsize - dist_factor[6];
+    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    ilen = ix - dist_factor[6];
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+
+    ox = dist_factor[6];
+    oy = 0.0;
+    olen = dist_factor[7];
+    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    ilen = dist_factor[7] - iy;
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+
+    ox = dist_factor[6];
+    oy = ysize;
+    olen = ysize - dist_factor[7];
+    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    ilen = iy - dist_factor[7];
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+
+
+    ox = 0.0;
+    oy = 0.0;
+    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    ilen = dist_factor[6] - ix;
+    olen = dist_factor[6];
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+    ilen = dist_factor[7] - iy;
+    olen = dist_factor[7];
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+
+    ox = xsize;
+    oy = 0.0;
+    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    ilen = ix - dist_factor[6];
+    olen = xsize - dist_factor[6];
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+    ilen = dist_factor[7] - iy;
+    olen = dist_factor[7];
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+
+    ox = 0.0;
+    oy = ysize;
+    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    ilen = dist_factor[6] - ix;
+    olen = dist_factor[6];
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+    ilen = iy - dist_factor[7];
+    olen = ysize - dist_factor[7];
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+
+    ox = xsize;
+    oy = ysize;
+    arParamObserv2Ideal( dist_factor, ox, oy, &ix, &iy, dist_function_version );
+    ilen = ix - dist_factor[6];
+    olen = xsize - dist_factor[6];
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+    ilen = iy - dist_factor[7];
+    olen = ysize - dist_factor[7];
+    //ARLOG("Olen = %f, Ilen = %f, s = %f\n", olen, ilen, ilen / olen);
+    if( ilen > 0 ) {
+        sf1 = ilen / olen;
+        if( sf1 < sf ) sf = sf1;
+    }
+
+    if( sf == 100.0 ) sf = 1.0;
+
+    return sf;
+}
 
 Pose::Pose()
 {
