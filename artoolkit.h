@@ -5,6 +5,8 @@ extern "C"{
 #include <AR/config.h>
 #include <AR/arFilterTransMat.h>
 #include <AR/arMulti.h>
+#include <AR/video.h>
+
 }
 #include <QDebug>
 #include <QTime>

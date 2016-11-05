@@ -105,11 +105,11 @@ void ARToolKit::run()
             ar_buffer->fillFlag=1;
             ar_buffer->time_sec=(ARUint32)QDateTime::currentMSecsSinceEpoch()/1000;
             ar_buffer->time_usec=(ARUint32)QDateTime::currentMSecsSinceEpoch()-ar_buffer->time_sec*1000;
-            ar_buffer->buffLuma=ar_buffer->buff;
+//          ar_buffer->buffLuma=ar_buffer->buff;
 //            QImage img(ar_buffer->buff,cameraResolution.width(),cameraResolution.height(),QImage::Format_Grayscale8);
 //            img.save(QString(getenv("EXTERNAL_STORAGE"))+"/Pictures/"+QString::number(rand()).append(".png"));
            // Detect the markers in the video frame.
-            if (arDetectMarker(ar_handle, ar_buffer) < 0) {
+            if (arDetectMarker(ar_handle, ar_buffer->buff) < 0) {
                 qDebug()<<"Error in arDetectMarker";
                 continue;
             }

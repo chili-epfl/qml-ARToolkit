@@ -37,7 +37,8 @@ INSTALLS += target qmldir
 INCLUDEPATH += /home/chili/artoolkit5/include
 
 android{
-   LIBS+=  -L$$PWD/../../artoolkit5/android/libs/armeabi-v7a
+   INCLUDEPATH += /home/chili/ARToolKit5-bin-5.3.2-Android/include
+   LIBS+=  -L/home/chili/ARToolKit5-bin-5.3.2-Android/android/libs/armeabi-v7a
    LIBS+=  -lARWrapper
 }
 

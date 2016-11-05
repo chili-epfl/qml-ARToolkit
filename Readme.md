@@ -27,7 +27,7 @@ On systems where the frame is a OpenGL texture (Android), the frame is scaled to
 
 ### Build
 
-* Download and build [ARToolkit]   
+* Download the sdk [ARToolkit]   
 * In the .pro file change INCLUDEPATH and LIBS according to the ARToolkit directory on your system
 * (Optional) Add make install in the build step
 * (ANDROID) Remeber to add the libs into the apk
