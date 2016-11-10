@@ -52,7 +52,7 @@ QVideoFilterRunnable *ARToolKitVideoFilter::createFilterRunnable()
     m_filter_runnable->setPause(m_pause);
     m_filter_runnable->start();
 
-    connect(this,SIGNAL(destroyed(QObject*)),m_filter_runnable,SLOT(deleteLater()));
+    //connect(this,SIGNAL(destroyed(QObject*)),m_filter_runnable,SLOT(deleteLater()));
     connect(m_filter_runnable,SIGNAL(destroyed(QObject*)),this,SLOT(cleanFilter()));
 
     connect(m_filter_runnable,SIGNAL(objectsReady(PoseMap)),this,SLOT(notifyObservers(PoseMap)));

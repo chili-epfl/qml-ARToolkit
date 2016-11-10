@@ -79,7 +79,7 @@ void ARToolKit::run()
     timer.start();
 #endif
 
-    frameLock.lock();
+//    frameLock.lock();
     int marker_num;
     ARMarkerInfo* marker_info;
     QHash<int, ARMarkerInfo> current_markers;
@@ -89,6 +89,8 @@ void ARToolKit::run()
     qreal err;
     QQuaternion openglAlignment=QQuaternion::fromAxisAndAngle(1,0,0,180);
     while(running){
+        frameLock.lock();
+        nextFrameCond.wait(&frameLock);
         if (nextFrameAvailable) {
             nextFrameAvailable=false;
             if(memory_size!=buffer.size()){
@@ -264,7 +266,7 @@ void ARToolKit::run()
             emit objectsReady(posemap);
 
         }
-        nextFrameCond.wait(&frameLock);
+
 #ifdef DEBUG_FPS
         millis = (long)timer.restart();
         millisElapsed += millis;
@@ -278,7 +280,7 @@ void ARToolKit::run()
 #endif
     }
 
-    frameLock.unlock();
+//    frameLock.unlock();
 
 }
 

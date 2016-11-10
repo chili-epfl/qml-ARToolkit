@@ -44,9 +44,6 @@ QVideoFrame ARToolkitFilterRunnable::run(QVideoFrame *input,
 
     auto handle=input->handleType();
 
-
-
-
     switch (handle) {
     case QAbstractVideoBuffer::NoHandle: ///< Mainly desktop configuration
         if(input->map(QAbstractVideoBuffer::ReadOnly)){
