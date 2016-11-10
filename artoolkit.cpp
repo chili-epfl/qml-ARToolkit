@@ -90,7 +90,6 @@ void ARToolKit::run()
     QQuaternion openglAlignment=QQuaternion::fromAxisAndAngle(1,0,0,180);
     while(running){
         frameLock.lock();
-        nextFrameCond.wait(&frameLock);
         if (nextFrameAvailable) {
             nextFrameAvailable=false;
             if(memory_size!=buffer.size()){
@@ -265,19 +264,26 @@ void ARToolKit::run()
             //notify
             emit objectsReady(posemap);
 
+#ifdef DEBUG_FPS
+            millis = (long)timer.restart();
+            millisElapsed += millis;
+            if(millis>0){
+                fps = FPS_RATE*fps + (1.0f - FPS_RATE)*(1000.0f/millis);
+                if(millisElapsed >= FPS_PRINT_PERIOD){
+                    qDebug("ARToolkit is running at %f FPS",fps);
+                    millisElapsed = 0;
+                }
+            }
+#endif
+
+        }
+        else{
+            nextFrameCond.wait(&frameLock);
+            frameLock.unlock();
         }
 
-#ifdef DEBUG_FPS
-        millis = (long)timer.restart();
-        millisElapsed += millis;
-        if(millis>0){
-            fps = FPS_RATE*fps + (1.0f - FPS_RATE)*(1000.0f/millis);
-            if(millisElapsed >= FPS_PRINT_PERIOD){
-                qDebug("ARToolkit is running at %f FPS",fps);
-                millisElapsed = 0;
-            }
-        }
-#endif
+
+
     }
 
 //    frameLock.unlock();
