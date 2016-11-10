@@ -34,8 +34,6 @@ target.path = $$installPath
 INSTALLS += target qmldir
 
 #Change these paths according to your artoolkit directory
-INCLUDEPATH += /home/chili/artoolkit5/include
-
 android{
    INCLUDEPATH += /home/chili/ARToolKit5-bin-5.3.2-Android/include
    LIBS+=  -L/home/chili/ARToolKit5-bin-5.3.2-Android/android/libs/armeabi-v7a
@@ -43,8 +41,9 @@ android{
 }
 
 !android{
-    LIBS+= -L$$PWD/../../artoolkit5/lib -L$$PWD/../../artoolkit5/lib/linux-x86_64
-    LIBS+= -lAR -lARICP -lARWrapper
+    INCLUDEPATH += /home/chili/ARToolKit5-bin-5.3.2r1-Linux-x86_64/include
+    LIBS+=  -L/home/chili/ARToolKit5-bin-5.3.2r1-Linux-x86_64/lib/
+    LIBS+= -Wl,-whole-archive -lAR -lARICP -lARMulti -lAR2 -lARUtil -Wl,-no-whole-archive
 }
 
 #Define DEBUG_FPS if you want to print the fps
