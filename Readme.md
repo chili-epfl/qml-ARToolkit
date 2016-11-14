@@ -38,3 +38,8 @@ On systems where the frame is a OpenGL texture (Android), the frame is scaled to
         $$PWD/../../artoolkit5/android/libs/armeabi-v7a/libARWrapper.so
 
 [ARToolkit]: <http://artoolkit.org/>
+
+### Using ARTags
+
+You will find .png graphic files representing the 64 2D-barcode patterns in the ARToolKit SDK download.
+See folder path [ARToolKit SDK path]/doc/patterns/Matrix code 3×3 (72dpi)
