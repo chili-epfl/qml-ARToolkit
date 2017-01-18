@@ -1,7 +1,7 @@
 #ifndef ARUCODETECTOR_H
 #define ARUCODETECTOR_H
 
-#include <QtMultimedia>
+#include <QtMultimedia/QAbstractVideoFilter>
 #include <QQuickItem>
 #include <QUrl>
 #include <QVector4D>
