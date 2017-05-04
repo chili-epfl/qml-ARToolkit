@@ -97,6 +97,9 @@ public:
     void setLabelingThreshold(int v);
     void setFilter_sample_rate(qreal v);
     void setFilter_cutoff_freq(qreal v);
+    void presentFrame(QByteArray &frame, QByteArray &frame_plane_1, QByteArray &frame_plane_2);
+    void setPixelFormat(AR_PIXEL_FORMAT code);
+    void setFlip_Image(bool val);
 public slots:
     void run();
     void setCameraResolution(QSize size);
@@ -115,9 +118,16 @@ private:
     bool running = false;               ///< Whether the should keep running, we don't need a mutex for this
 
     QByteArray buffer;
+    QByteArray buffer_plane_1;
+    QByteArray buffer_plane_2;
+    //For now we support multiplane only in case of 3 planes for YUV formats; otherwise it's only 1 plane
+    //Plane size is the size of the buffer plane currently allocated
+    int planes_size[3]={0,0,0};
 
     AR2VideoBufferT* ar_buffer;
-    int memory_size;
+
+    bool m_flip_image;
+
     ARParamLT* ar_param;
     ARHandle* ar_handle;
     AR3DHandle* ar_3d_handle;

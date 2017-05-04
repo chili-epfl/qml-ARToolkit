@@ -25,6 +25,7 @@ ARToolKitVideoFilter::ARToolKitVideoFilter(QQuickItem *parent):
     m_matrix_code=MATRIX_CODE_3x3;
     m_cutoff_freq=15;
     m_sample_freq=30;
+    m_flip_image=false;
 }
 
 ARToolKitVideoFilter::~ARToolKitVideoFilter(){
@@ -50,6 +51,7 @@ QVideoFilterRunnable *ARToolKitVideoFilter::createFilterRunnable()
     m_filter_runnable->setFilter_cutoff_freq(m_cutoff_freq);
     m_filter_runnable->setFilter_sample_rate(m_sample_freq);
     m_filter_runnable->setPause(m_pause);
+    m_filter_runnable->setFlip_Image(m_flip_image);
     m_filter_runnable->start();
 
     //connect(this,SIGNAL(destroyed(QObject*)),m_filter_runnable,SLOT(deleteLater()));
@@ -206,6 +208,16 @@ void ARToolKitVideoFilter::setFilter_sample_rate(qreal val)
         if(m_filter_runnable)
             m_filter_runnable->setFilter_sample_rate(m_labeling_threshold);
         emit filter_sample_rateChanged();
+    }
+}
+
+void ARToolKitVideoFilter::setFlip_image(bool val)
+{
+    if(m_flip_image!=val){
+        m_flip_image=val;
+        if(m_filter_runnable)
+            m_filter_runnable->setFlip_Image(m_flip_image);
+        emit flip_imageChanged();
     }
 }
 

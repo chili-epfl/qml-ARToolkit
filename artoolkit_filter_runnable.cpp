@@ -4,8 +4,7 @@
 
 
 ARToolkitFilterRunnable::ARToolkitFilterRunnable(QObject *parent):
-    QObject(parent),
-    gl(nullptr)
+    QObject(parent)
 {
     detector=new ARToolKit();
 
@@ -41,151 +40,111 @@ QVideoFrame ARToolkitFilterRunnable::run(QVideoFrame *input,
 
     timer.start();
     auto pixelFormat=surfaceFormat.pixelFormat();
-
-    auto handle=input->handleType();
-
-    switch (handle) {
-    case QAbstractVideoBuffer::NoHandle: ///< Mainly desktop configuration
-        if(input->map(QAbstractVideoBuffer::ReadOnly)){
-            auto width=input->width();
-            auto height=input->height();
-            if(camera_resolution.width()!= width || camera_resolution.height() != height){
-                camera_resolution=QSize(width,height);
-                detector->setCameraResolution(camera_resolution);
-                emit cameraResolutionChanged(camera_resolution);
-            }
-            if(frame.size()!=width*height){
-                frame.resize(width*height);
-            }
-            if( QVideoFrame::imageFormatFromPixelFormat(pixelFormat)!=QImage::Format_Invalid ){
-                QImage img( input->bits(),
-                                   input->width(),
-                            input->height(),
-                            input->bytesPerLine(),
-                            QVideoFrame::imageFormatFromPixelFormat(pixelFormat));
-                img=img.convertToFormat(QImage::Format_Grayscale8);
-
-                memcpy(frame.data(),img.bits(),sizeof(ARUint8)*input->width()*input->height());
-                detector->presentFrame(frame);
-
-            }
-            else if (pixelFormat == QVideoFrame::PixelFormat::Format_YUV420P ||
-                     pixelFormat == QVideoFrame::PixelFormat::Format_NV21 ||
-                     pixelFormat == QVideoFrame::PixelFormat::Format_NV12
-                     ) {
-                memcpy(frame.data(),input->bits(),sizeof(ARUint8)*input->width()*input->height());
-                detector->presentFrame(frame);
-            }
-            else if(pixelFormat==QVideoFrame::PixelFormat::Format_BGR32) {
-                QImage img( input->bits(),
-                                   input->width(),
-                            input->height(),
-                            input->bytesPerLine(),
-                            QImage::Format_RGB32);
-                img=img.convertToFormat(QImage::Format_Grayscale8);
-                memcpy(frame.data(),img.bits(),sizeof(ARUint8)*input->width()*input->height());
-                detector->presentFrame(frame);
-            }
-            else{
-                qWarning()<<" Handle: NoHandle, unsupported pixel format:"<<pixelFormat;
-            }
-            input->unmap();
+    if(input->map(QAbstractVideoBuffer::ReadOnly)){
+        auto width=input->width();
+        auto height=input->height();
+        auto planes=input->planeCount();
+        if(camera_resolution.width()!= width || camera_resolution.height() != height){
+            camera_resolution=QSize(width,height);
+            detector->setCameraResolution(camera_resolution);
+            emit cameraResolutionChanged(camera_resolution);
         }
-        else{
-            qWarning()<<"Cannot map video buffer";
+        if ((pixelFormat == QVideoFrame::PixelFormat::Format_NV21 ||
+                pixelFormat == QVideoFrame::PixelFormat::Format_NV12) && planes==3){
+
+            if(pixelFormat == QVideoFrame::PixelFormat::Format_NV21)
+                detector->setPixelFormat(AR_PIXEL_FORMAT_NV21);
+            else
+                detector->setPixelFormat(AR_PIXEL_FORMAT_420f);
+            int buffer_size=input->width()*input->height();
+            int half_buffer_size=buffer_size*0.5;
+            if(frame.size()!=buffer_size)
+                frame.resize(buffer_size);
+            if(frame_plane_1.size()!=half_buffer_size)
+                frame_plane_1.resize(half_buffer_size);
+            if(frame_plane_2.size()!=half_buffer_size)
+                frame_plane_2.resize(half_buffer_size);
+            memcpy(frame.data(),input->bits(0),sizeof(ARUint8)*buffer_size);
+            memcpy(frame_plane_1.data(),input->bits(1),sizeof(ARUint8)*half_buffer_size);
+            memcpy(frame_plane_2.data(),input->bits(2),sizeof(ARUint8)*half_buffer_size);
+            detector->presentFrame(frame,frame_plane_1,frame_plane_2);
         }
-        break;
-    case QAbstractVideoBuffer::GLTextureHandle:
-    {
-        if(pixelFormat!=QVideoFrame::PixelFormat::Format_BGR32){
-            qWarning()<<" Handle: GLTextureHandle, unsupported pixel format:"<<pixelFormat;
-        }else{
-            auto outputHeight=972;
-            auto outputWidth(outputHeight * input->width() / input->height());
-            if(camera_resolution.width()!= outputWidth || camera_resolution.height() != outputHeight){
-                camera_resolution=QSize(outputWidth,outputHeight);
-                detector->setCameraResolution(camera_resolution);
-                emit cameraResolutionChanged(camera_resolution);
-            }
-            if(frame.size()!=outputWidth*outputHeight){
-                frame.resize(outputWidth*outputHeight);
-            }
-
-
-            if (gl == nullptr) {
-
-                auto context(QOpenGLContext::currentContext());
-                gl = context->extraFunctions();
-
-                auto version(context->isOpenGLES() ? "#version 300 es\n" : "#version 130\n");
-
-                QString vertex(version);
-                vertex += R"(
-                          out vec2 coord;
-                          void main(void) {
-                          int id = gl_VertexID;
-                          coord = vec2((id << 1) & 2, id & 2);
-                          gl_Position = vec4(coord * 2.0 - 1.0, 0.0, 1.0);
-                          }
-                          )";
-
-                QString fragment(version);
-
-                /*Assuming bgr32 color format*/
-                fragment += R"(
-                            in lowp vec2 coord;
-                            uniform sampler2D image;
-                            const lowp vec3 luma = vec3(0.1140, 0.5870,0.2989 );
-                            out lowp float fragment;
-                            void main(void) {
-                            lowp vec3 color = texture(image, coord).rgb;
-                            fragment = dot(color, luma);
-                            //fragment = pow(fragment,2.0);
-                            }
-                            )";
-
-                program.addShaderFromSourceCode(QOpenGLShader::Vertex, vertex);
-                program.addShaderFromSourceCode(QOpenGLShader::Fragment, fragment);
-                program.link();
-                imageLocation = program.uniformLocation("image");
-
-                gl->glGenRenderbuffers(1, &renderbuffer);
-                gl->glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-                gl->glRenderbufferStorage(GL_RENDERBUFFER, QOpenGLTexture::R8_UNorm, outputWidth, outputHeight);
-                gl->glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-                gl->glGenFramebuffers(1, &framebuffer);
-                gl->glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-                gl->glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer);
-                gl->glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-            }
-
-            gl->glActiveTexture(GL_TEXTURE0);
-            gl->glBindTexture(QOpenGLTexture::Target2D, input->handle().toUInt());
-            gl->glGenerateMipmap(QOpenGLTexture::Target2D);
-            gl->glTexParameteri(QOpenGLTexture::Target2D, GL_TEXTURE_MIN_FILTER, QOpenGLTexture::LinearMipMapLinear);
-
-            program.bind();
-            program.setUniformValue(imageLocation, 0);
-            program.enableAttributeArray(0);
-            gl->glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-            gl->glViewport(0, 0, outputWidth, outputHeight);
-            gl->glDisable(GL_BLEND);
-            gl->glDrawArrays(GL_TRIANGLES, 0, 3);
-
-            gl->glPixelStorei(GL_PACK_ALIGNMENT, 1);
-            gl->glReadPixels(0, 0, outputWidth, outputHeight, QOpenGLTexture::Red, QOpenGLTexture::UInt8,frame.data());
+        else if(pixelFormat == QVideoFrame::PixelFormat::Format_YUV420P
+                || pixelFormat == QVideoFrame::PixelFormat::Format_YV12
+                || pixelFormat == QVideoFrame::PixelFormat::Format_IMC1
+                || pixelFormat == QVideoFrame::PixelFormat::Format_IMC2
+                || pixelFormat == QVideoFrame::PixelFormat::Format_IMC3
+                || pixelFormat == QVideoFrame::PixelFormat::Format_IMC4
+                || pixelFormat == QVideoFrame::PixelFormat::Format_Y8){
+             detector->setPixelFormat(AR_PIXEL_FORMAT_MONO);
+             int buffer_size=input->width()*input->height();
+             if(frame.size()!=buffer_size)
+                 frame.resize(buffer_size);
+             memcpy(frame.data(),input->bits(0),sizeof(ARUint8)*buffer_size);
+             detector->presentFrame(frame);
+        }
+        else if(pixelFormat == QVideoFrame::PixelFormat::Format_ARGB32 ||
+                pixelFormat == QVideoFrame::PixelFormat::Format_RGB32){
+             detector->setPixelFormat(AR_PIXEL_FORMAT_ARGB);
+             int buffer_size=4*input->width()*input->height();
+             if(frame.size()!=buffer_size)
+                 frame.resize(buffer_size);
+             memcpy(frame.data(),input->bits(0),sizeof(ARUint8)*buffer_size);
+             detector->presentFrame(frame);
+        }
+        else if(pixelFormat == QVideoFrame::PixelFormat::Format_RGB24){
+             detector->setPixelFormat(AR_PIXEL_FORMAT_RGB);
+             int buffer_size=3*input->width()*input->height();
+             if(frame.size()!=buffer_size)
+                 frame.resize(buffer_size);
+             memcpy(frame.data(),input->bits(0),sizeof(ARUint8)*buffer_size);
+             detector->presentFrame(frame);
+        }
+        else if(pixelFormat == QVideoFrame::PixelFormat::Format_BGRA32||
+                pixelFormat == QVideoFrame::PixelFormat::Format_BGR32){
+             detector->setPixelFormat(AR_PIXEL_FORMAT_BGRA);
+             int buffer_size=4*input->width()*input->height();
+             if(frame.size()!=buffer_size)
+                 frame.resize(buffer_size);
+             memcpy(frame.data(),input->bits(0),sizeof(ARUint8)*buffer_size);
+             detector->presentFrame(frame);
+        }
+        else if(pixelFormat == QVideoFrame::PixelFormat::Format_BGR24){
+             detector->setPixelFormat(AR_PIXEL_FORMAT_BGR);
+             int buffer_size=3*input->width()*input->height();
+             if(frame.size()!=buffer_size)
+                 frame.resize(buffer_size);
+             memcpy(frame.data(),input->bits(0),sizeof(ARUint8)*buffer_size);
+             detector->presentFrame(frame);
+        }
+        else if(pixelFormat == QVideoFrame::PixelFormat::Format_UYVY){
+             detector->setPixelFormat(AR_PIXEL_FORMAT_2vuy);
+             int buffer_size=2*input->width()*input->height();
+             if(frame.size()!=buffer_size)
+                 frame.resize(buffer_size);
+             memcpy(frame.data(),input->bits(0),sizeof(ARUint8)*buffer_size);
+             detector->presentFrame(frame);
+        }
+        else if(pixelFormat == QVideoFrame::PixelFormat::Format_YUYV){
+             detector->setPixelFormat(AR_PIXEL_FORMAT_yuvs);
+             int buffer_size=2*input->width()*input->height();
+             if(frame.size()!=buffer_size)
+                 frame.resize(buffer_size);
+             memcpy(frame.data(),input->bits(0),sizeof(ARUint8)*buffer_size);
+             detector->presentFrame(frame);
+        }
+        else if( QVideoFrame::imageFormatFromPixelFormat(pixelFormat)!=QImage::Format_Invalid ){
+            QImage img( input->bits(),
+                        input->width(),
+                        input->height(),
+                        input->bytesPerLine(),
+                        QVideoFrame::imageFormatFromPixelFormat(pixelFormat));
+            img=img.convertToFormat(QImage::Format_ARGB32);
+            memcpy(frame.data(),img.bits(),4*sizeof(ARUint8)*input->width()*input->height());
             detector->presentFrame(frame);
         }
+        input->unmap();
     }
-        break;
-    default:
-        qWarning()<<"Unsupported Video Frame Handle:"<<handle;
-        break;
-
-    }
-
     return *input;
 
 }
@@ -263,4 +222,10 @@ void ARToolkitFilterRunnable::setFilter_cutoff_freq(qreal v)
 {
     if(detector)
         detector->setFilter_cutoff_freq(v);
+}
+
+void ARToolkitFilterRunnable::setFlip_Image(bool val)
+{
+    if(detector)
+        detector->setFlip_Image(val);
 }

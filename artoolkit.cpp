@@ -14,6 +14,27 @@ const float FPS_RATE = 0.9f;            ///< Rate of using the older FPS estimat
 const int FPS_PRINT_PERIOD = 500;       ///< Period of printing the FPS estimate, in milliseconds
 #endif
 
+inline void do_flip_mono_plane(QByteArray& src, int w, int h, int depth)
+{
+    const int data_bytes_per_line = w * (depth / 8);
+    uint *srcPtr = reinterpret_cast<uint *>(src.data());
+    uint *dstPtr = reinterpret_cast<uint *>(src.data() + (h - 1) * data_bytes_per_line);
+    h = h / 2;
+    const int uint_per_line = (data_bytes_per_line + 3) >> 2; // bytes per line must be a multiple of 4
+    for (int y = 0; y < h; ++y) {
+        // This is auto-vectorized, no need for SSE2 or NEON versions:
+        for (int x = 0; x < uint_per_line; x++) {
+            const uint d = dstPtr[x];
+            const uint s = srcPtr[x];
+            dstPtr[x] = s;
+            srcPtr[x] = d;
+        }
+        srcPtr += data_bytes_per_line >> 2;
+        dstPtr -= data_bytes_per_line >> 2;
+    }
+}
+
+
 ARToolKit::ARToolKit()
 {
     labelingThreshold=AR_DEFAULT_LABELING_THRESH;
@@ -33,9 +54,10 @@ ARToolKit::ARToolKit()
     patter_detection_mode=AR_TEMPLATE_MATCHING_MONO_AND_MATRIX;
     code_type=AR_MATRIX_CODE_3x3;
 
-    memory_size=0;
-
     ar_buffer=(AR2VideoBufferT*)malloc(sizeof(AR2VideoBufferT));
+    ar_buffer->buff=NULL;
+    ar_buffer->bufPlanes=NULL;
+    ar_buffer->bufPlaneCount=0;
 
     projectionMatrix=QMatrix4x4(
                 610, 0., 640/2 ,0,
@@ -48,6 +70,7 @@ ARToolKit::ARToolKit()
     m_cutoff_freq=AR_FILTER_TRANS_MAT_CUTOFF_FREQ_DEFAULT;
     m_sample_freq=AR_FILTER_TRANS_MAT_SAMPLE_RATE_DEFAULT;
 
+    m_flip_image=false;
 
     setupCameraParameters();
     setupMarkerParameters();
@@ -65,7 +88,14 @@ ARToolKit::~ARToolKit()
         delete ar_multimarker_objects[id];
     }
     cleanup();
-
+    if(planes_size[0]!=0)
+        free(ar_buffer->buff);
+    if(planes_size[1]!=0)
+        free(ar_buffer->bufPlanes[1]);
+    if(planes_size[2]!=0)
+        free(ar_buffer->bufPlanes[2]);
+    if(ar_buffer->bufPlanes!=NULL)
+        free(ar_buffer->bufPlanes);
 }
 
 void ARToolKit::run()
@@ -92,17 +122,78 @@ void ARToolKit::run()
         frameLock.lock();
         if (nextFrameAvailable) {
             nextFrameAvailable=false;
-            if(memory_size!=buffer.size()){
-                if(memory_size!=0){
+
+            if(planes_size[0]!=buffer.size()){
+                if(planes_size[0]!=0){
                     free(ar_buffer->buff);
+                    ar_buffer->buff=NULL;
                 }
-                ar_buffer->buff=(ARUint8*)malloc(sizeof(ARUint8)*buffer.size());
-                memory_size=buffer.size();
+                if(buffer.size()>0)
+                    ar_buffer->buff=(ARUint8*)malloc(sizeof(ARUint8)*buffer.size());
+                planes_size[0]=buffer.size();
+            }
+            if(m_flip_image){
+                switch (pixFormat) {
+                case AR_PIXEL_FORMAT_RGB:
+                case AR_PIXEL_FORMAT_BGR:
+                    do_flip_mono_plane(buffer,cameraResolution.width(),cameraResolution.height(),24);
+                    break;
+                case AR_PIXEL_FORMAT_BGRA:
+                case AR_PIXEL_FORMAT_ARGB:
+                    do_flip_mono_plane(buffer,cameraResolution.width(),cameraResolution.height(),32);
+                    break;
+                case AR_PIXEL_FORMAT_MONO:
+                    do_flip_mono_plane(buffer,cameraResolution.width(),cameraResolution.height(),8);
+                    break;
+                default:
+                    break;
+                }
             }
             memcpy(ar_buffer->buff,buffer.constData(),sizeof(ARUint8)*buffer.size());
+
+            if(buffer_plane_1.size()==0 && buffer_plane_2.size()==0){
+                if(ar_buffer->bufPlanes!=NULL){
+                    if(ar_buffer->bufPlanes[1]!=NULL)
+                        free(ar_buffer->bufPlanes[1]);
+                    if(ar_buffer->bufPlanes[2]!=NULL)
+                        free(ar_buffer->bufPlanes[2]);
+                    free(ar_buffer->bufPlanes);
+                    ar_buffer->bufPlaneCount=0;
+                    ar_buffer->bufPlanes=NULL;
+                }
+            }
+            else{
+                ar_buffer->bufPlaneCount=3;
+
+                if(ar_buffer->bufPlanes==NULL)
+                    ar_buffer->bufPlanes=(ARUint8**)malloc(sizeof(ARUint8*)*3);
+
+                ar_buffer->bufPlanes[0]=ar_buffer->buff;
+
+                if(planes_size[1]!=buffer_plane_1.size()){
+                    if(planes_size[1]!=0){
+                        free(ar_buffer->bufPlanes[1]);
+                        ar_buffer->bufPlanes[1]=NULL;
+                    }
+                    if(buffer_plane_1.size()>0)
+                        ar_buffer->bufPlanes[1]=(ARUint8*)malloc(sizeof(ARUint8)*buffer_plane_1.size());
+                    planes_size[1]=buffer_plane_1.size();
+                }
+
+                if(planes_size[2]!=buffer_plane_2.size()){
+                    if(planes_size[2]!=0){
+                        free(ar_buffer->bufPlanes[2]);
+                        ar_buffer->bufPlanes[2]=NULL;
+                    }
+                    if(buffer_plane_2.size()>0)
+                        ar_buffer->bufPlanes[2]=(ARUint8*)malloc(sizeof(ARUint8)*buffer_plane_2.size());
+                    planes_size[2]=buffer_plane_2.size();
+                }
+                memcpy(ar_buffer->bufPlanes[1],buffer_plane_1.constData(),sizeof(ARUint8)*buffer_plane_1.size());
+                memcpy(ar_buffer->bufPlanes[2],buffer_plane_2.constData(),sizeof(ARUint8)*buffer_plane_2.size());
+            }
+
             frameLock.unlock();
-            ar_buffer->bufPlaneCount=0;
-            ar_buffer->bufPlanes=NULL;
             ar_buffer->fillFlag=1;
             ar_buffer->time_sec=(ARUint32)QDateTime::currentMSecsSinceEpoch()/1000;
             ar_buffer->time_usec=(ARUint32)QDateTime::currentMSecsSinceEpoch()-ar_buffer->time_sec*1000;
@@ -319,10 +410,41 @@ void ARToolKit::presentFrame(QByteArray& frame)
 
     frameLock.lock();
     buffer=frame;
+    buffer_plane_1.clear();
+    buffer_plane_2.clear();
     nextFrameAvailable = true;
     nextFrameCond.wakeAll();
     frameLock.unlock();
 }
+
+void ARToolKit::presentFrame(QByteArray& frame,QByteArray& frame_plane_1,QByteArray& frame_plane_2)
+{
+    frameLock.lock();
+    buffer=frame;
+    buffer_plane_1=frame_plane_1;
+    buffer_plane_2=frame_plane_2;
+    nextFrameAvailable = true;
+    nextFrameCond.wakeAll();
+    frameLock.unlock();
+}
+
+void ARToolKit::setPixelFormat(AR_PIXEL_FORMAT code)
+{
+    if(code!=pixFormat){
+        pixFormat=code;
+        if(ar_handle!=NULL)
+            if (arSetPixelFormat(ar_handle, pixFormat) < 0) {
+                cleanup();
+                qWarning("Error in setting pixel format");
+            }
+    }
+}
+
+void ARToolKit::setFlip_Image(bool val)
+{
+    m_flip_image=val;
+}
+
 
 void ARToolKit::stop()
 {

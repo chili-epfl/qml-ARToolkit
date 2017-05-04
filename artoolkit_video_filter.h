@@ -24,6 +24,7 @@ class ARToolKitVideoFilter : public QAbstractVideoFilter
     Q_PROPERTY(int labelingThreshold READ labelingThreshold WRITE setLabelingThreshold NOTIFY labelingThresholdChanged)
     Q_PROPERTY(qreal filter_cutoff_freq READ filter_cutoff_freq WRITE setFilter_cutoff_freq NOTIFY filter_cutoff_freqChanged)
     Q_PROPERTY(qreal filter_sample_rate READ filter_sample_rate WRITE setFilter_sample_rate NOTIFY filter_sample_rateChanged)
+    Q_PROPERTY(bool flip_image READ flip_image WRITE setFlip_image NOTIFY flip_imageChanged)
 public:
     enum MATRIX_CODE_TYPE {
         MATRIX_CODE_3x3= AR_MATRIX_CODE_3x3,                                        // Matrix code in range 0-63.
@@ -69,6 +70,8 @@ public:
     void setFilter_cutoff_freq(qreal val);
     void setFilter_sample_rate(qreal val);
 
+    bool flip_image(){return m_flip_image;}
+    void setFlip_image(bool val);
 signals:
     void projectionMatrixChanged();
     void pauseChanged();
@@ -80,6 +83,7 @@ signals:
     void labelingThresholdChanged();
     void filter_cutoff_freqChanged();
     void filter_sample_rateChanged();
+    void flip_imageChanged();
 public slots:
 
     Q_INVOKABLE void unregisterObserver(ARToolKitObject* o);
@@ -117,6 +121,8 @@ private:
     int m_labeling_threshold;
 
     qreal m_cutoff_freq,m_sample_freq;
+
+    bool m_flip_image;
 };
 
 #endif // ARUCODETECTOR_H

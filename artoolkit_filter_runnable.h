@@ -32,6 +32,7 @@ public:
     void setLabelingThreshold(int v);
     void setFilter_sample_rate(qreal v);
     void setFilter_cutoff_freq(qreal v);
+    void setFlip_Image(bool val);
 signals:
     void cameraResolutionChanged(QSize);
     void projectionMatrixChanged(QMatrix4x4);
@@ -42,13 +43,11 @@ private:
     bool pause;
     QThread detector_thread;
     ARToolKit* detector;
-    QOpenGLExtraFunctions* gl;
-    QOpenGLShaderProgram program;
-    GLint imageLocation;
-    GLuint framebuffer;
-    GLuint renderbuffer;
+
     QElapsedTimer timer;
     QByteArray frame;
+    QByteArray frame_plane_1;
+    QByteArray frame_plane_2;
 };
 
 
