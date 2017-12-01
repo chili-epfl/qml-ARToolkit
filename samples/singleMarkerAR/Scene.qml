@@ -1,5 +1,6 @@
 import Qt3D.Core 2.0
 import Qt3D.Render 2.0
+import Qt3D.Extras 2.0
 Entity {
     id: sceneRoot
 
@@ -20,38 +21,13 @@ Entity {
     }
 
     components: [
-        FrameGraph {
-            activeFrameGraph:TechniqueFilter {
-                objectName : "techniqueFilter"
-                // Select the forward rendering Technique of any used Effect
-                requires: [ Annotation { name: "renderingStyle"; value: "forward" } ]
-                // Use the whole viewport
-                Viewport {
-                    id: viewport
-                    objectName : "viewport"
-                    rect: Qt.rect(0.0, 0.0, 1.0, 1.0)
-                    clearColor: "transparent"
-
-                    // Use the specified camera
-                    CameraSelector {
-                        id : cameraSelector
-                        objectName : "cameraSelector"
+        RenderSettings {
+                    activeFrameGraph: ForwardRenderer {
                         camera: camera
-                        ClearBuffer {
-                            buffers : ClearBuffer.ColorDepthBuffer
-                            SortMethod {
-                                criteria: [
-                                    SortCriterion { sort: SortCriterion.StateChangeCost },
-                                    SortCriterion { sort: SortCriterion.Material },
-                                    SortCriterion { sort: SortCriterion.BackToFront }
-                                ]
-                            }
-                        }
+                        clearColor: "transparent"
                     }
-                }
-            }
-
         }
+
     ]
 
     Entity {

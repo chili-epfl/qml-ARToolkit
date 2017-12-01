@@ -43,13 +43,14 @@ ApplicationWindow {
     ARToolkit{
         id:artoolkit
         matrixCode: ARToolkit.MATRIX_CODE_4x4_BCH_13_9_3
+        labelingThreshold: 150
         Component.onCompleted: {
             artoolkit.loadSingleMarkersConfigFile("qrc:/single_markers.json");
             artoolkit.loadMultiMarkersConfigFile("MultiMarker","qrc:/MultiMarkerConfig.dat");
         }
     }
     ARToolkitObject{
-        objectId: "Mat_36"
+        objectId: "Mat_22"
         id:ar_obj
         Component.onCompleted: artoolkit.registerObserver(ar_obj)
         onObjectIsVisibleChanged: console.log(objectIsVisible)
@@ -60,12 +61,12 @@ ApplicationWindow {
         Component.onCompleted: artoolkit.registerObserver(ar_obj_multi)
         onObjectIsVisibleChanged: console.log(objectIsVisible)
     }
+    //Comment this if to drop any 3d rendering
     Scene3D{
         anchors.fill: parent;
         Scene{
 
         }
-
     }
 
 
