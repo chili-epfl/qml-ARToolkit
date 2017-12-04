@@ -1,6 +1,6 @@
 # qml-ARToolkit
 
-qml-ARToolkit is a qml plugin wrapper around ARToolkit v5. 
+qml-ARToolkit is a qml plugin wrapper around ARToolkit v5. Video at <https://www.youtube.com/watch?v=6HB_uRrDi1M>
 
 ### Features
 - Marker and multimarker tracking (Patter detection not available) 
