@@ -22,7 +22,8 @@ The default camera matrix is
     0 , 0 , 1 
 assuming a camera resolution of (640,480) and zero distortion coefficients.
 The camera matrix and the distortion coefficients are scaled according to the camera resolution UNLESS they have beeen manually specified from the qml object.  
-On some Android platform the image should be mirrored vertically.
+
+**IMPORTANT: On some Android platform the image should be mirrored vertically.**
 ##### Pixel Format Conversion
 	
 This the table of the current mapping from QVideoFrame::PixelFormat to AR_PIXEL_FORMAT. 

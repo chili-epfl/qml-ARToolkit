@@ -19,7 +19,7 @@ LIBS+= -L$$PWD/../../../../artoolkit5/lib -L$$PWD/../../../../artoolkit5/lib/lin
 }
 
 android{
-LIBS+= -L$$PWD/../../../../artoolkit5/android/libs/armeabi-v7a/
+LIBS+= -L/home/chili/ARToolKit5-bin-5.3.2-Android/android/libs/armeabi-v7a
 }
 
 DISTFILES += \
@@ -27,7 +27,7 @@ DISTFILES += \
 
 contains(ANDROID_TARGET_ARCH,armeabi-v7a) {
     ANDROID_EXTRA_LIBS = \
-        $$PWD/../../../../artoolkit5/android/libs/armeabi-v7a/libc++_shared.so\
-        $$PWD/../../../../artoolkit5/android/libs/armeabi-v7a/libARWrapper.so
+        /home/chili/ARToolKit5-bin-5.3.2-Android/android/libs/armeabi-v7a/libc++_shared.so\
+        /home/chili/ARToolKit5-bin-5.3.2-Android/android/libs/armeabi-v7a/libARWrapper.so
 }
 

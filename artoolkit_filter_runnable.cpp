@@ -1,7 +1,7 @@
 #include "artoolkit_filter_runnable.h"
 #include <QDateTime>
 #include <QUrl>
-
+#include <QImage>
 
 ARToolkitFilterRunnable::ARToolkitFilterRunnable(QObject *parent):
     QObject(parent)

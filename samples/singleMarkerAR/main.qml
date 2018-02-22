@@ -12,7 +12,7 @@ ApplicationWindow {
     Camera{
         id:cameraDev
         viewfinder.resolution: "640x480"
-        deviceId: QtMultimedia.availableCameras[1].deviceId
+        deviceId: QtMultimedia.availableCameras[0].deviceId
         imageProcessing.whiteBalanceMode: CameraImageProcessing.WhiteBalanceAuto
         focus.focusMode: CameraFocus.FocusAuto + CameraFocus.FocusContinuous
         focus.focusPointMode: CameraFocus.FocusPointAuto
@@ -44,6 +44,7 @@ ApplicationWindow {
         id:artoolkit
         matrixCode: ARToolkit.MATRIX_CODE_4x4_BCH_13_9_3
         labelingThreshold: 150
+        flip_image: Qt.platform.os=="android"
         Component.onCompleted: {
             artoolkit.loadSingleMarkersConfigFile("qrc:/single_markers.json");
             artoolkit.loadMultiMarkersConfigFile("MultiMarker","qrc:/MultiMarkerConfig.dat");
