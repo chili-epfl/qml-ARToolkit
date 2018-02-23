@@ -6,7 +6,6 @@
 #include <QJsonArray>
 #include <QJsonObject>
 //#include <AR/video.h>
-#include <QImage>
 
 #ifdef DEBUG_FPS
 #include <QElapsedTimer>
