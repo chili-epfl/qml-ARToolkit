@@ -195,7 +195,7 @@ void ARToolKitVideoFilter::setFilter_cutoff_freq(qreal val)
     if(val>0 && val!=m_cutoff_freq){
         m_cutoff_freq=val;
         if(m_filter_runnable)
-            m_filter_runnable->setFilter_cutoff_freq(m_labeling_threshold);
+            m_filter_runnable->setFilter_cutoff_freq(m_cutoff_freq);
         emit filter_cutoff_freqChanged();
     }
 
@@ -206,7 +206,7 @@ void ARToolKitVideoFilter::setFilter_sample_rate(qreal val)
     if(val>0 && val!=m_sample_freq){
         m_sample_freq=val;
         if(m_filter_runnable)
-            m_filter_runnable->setFilter_sample_rate(m_labeling_threshold);
+            m_filter_runnable->setFilter_sample_rate(m_sample_freq);
         emit filter_sample_rateChanged();
     }
 }
